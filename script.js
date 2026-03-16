@@ -12,6 +12,24 @@ document.addEventListener("DOMContentLoaded", () => {
   const timerElement = document.getElementById("timer");
   const submitButton = document.getElementById("submit-btn");
 
+  // ============================================
+  // ANALYTICS SETUP
+  // ============================================
+  const analytics = new AnalyticsManager();
+  const timestamp = Date.now();
+  const randomId = Math.random().toString(36).substring(2, 8);
+  const sessionName = `session_${timestamp}_${randomId}`;
+  const sessionId = `${timestamp}-${Math.random().toString(36).substring(2)}`;
+  
+  analytics.initialize('NumberSudoku', sessionName, sessionId);
+  
+  let levelStartTime = 0;
+  let currentLevelId = null;
+  let submitAttempts = 0;
+  let movesMade = 0;
+  let undoCount = 0;
+  let hintsUsed = 0;
+
   let board = [];
   let solution = [];
   let initialBoard = [];
@@ -29,23 +47,45 @@ document.addEventListener("DOMContentLoaded", () => {
   newGameBtn.addEventListener("click", () => startNewGame());
   submitBtn.addEventListener("click", submitGame);
 
-  undoBtn.addEventListener("click", undoMove);
+  undoBtn.addEventListener("click", () => {
+    undoMove();
+    analytics.addRawMetric('undo_button_clicks', undoCount);
+  });
   eraseBtn.addEventListener("click", () => {
-    if (selectedCell) fillCell(selectedCell, 0);
+    if (selectedCell) {
+      fillCell(selectedCell, 0);
+      analytics.addRawMetric('erase_button_clicks', (analytics._eraseClicks = (analytics._eraseClicks || 0) + 1));
+    }
   });
   noteBtn.addEventListener("click", () => {
     isNotesMode = !isNotesMode;
     noteBtn.classList.toggle("active");
     showMessage(isNotesMode ? "Notes Mode On" : "Notes Mode Off");
+    analytics.addRawMetric('notes_mode_toggles', (analytics._noteToggles = (analytics._noteToggles || 0) + 1));
+    analytics.addRawMetric('notes_mode_active', isNotesMode);
   });
 
-  themeToggle.addEventListener("click", toggleTheme);
+  themeToggle.addEventListener("click", () => {
+    toggleTheme();
+    const currentTheme = document.documentElement.getAttribute("data-theme") || "light";
+    analytics.addRawMetric('theme_toggles', (analytics._themeToggles = (analytics._themeToggles || 0) + 1));
+    analytics.addRawMetric('current_theme', currentTheme);
+  });
 
   diffBtns.forEach((btn) => {
     btn.addEventListener("click", (e) => {
       diffBtns.forEach((b) => b.classList.remove("active"));
       e.target.classList.add("active");
+      const previousDifficulty = difficulty;
       difficulty = e.target.dataset.diff;
+      
+      // Track difficulty change
+      if (previousDifficulty !== difficulty) {
+        analytics.addRawMetric('difficulty_changes', (analytics._difficultyChanges = (analytics._difficultyChanges || 0) + 1));
+        analytics.addRawMetric('difficulty_changed_from', previousDifficulty);
+        analytics.addRawMetric('difficulty_changed_to', difficulty);
+      }
+      
       startNewGame();
     });
   });
@@ -129,6 +169,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
     updateSubmitButton();
     startTimer();
+
+    // ============================================
+    // ANALYTICS: Start tracking new puzzle
+    // ============================================
+    currentLevelId = 'sudoku_' + difficulty + '_' + Date.now();
+    analytics.startLevel(currentLevelId);
+    levelStartTime = Date.now();
+    submitAttempts = 0;
+    movesMade = 0;
+    undoCount = 0;
+    hintsUsed = 0;
+    
+    // Reset per-game analytics counters
+    analytics._correctMoves = 0;
+    analytics._incorrectMoves = 0;
+    analytics._eraseClicks = 0;
+    analytics._noteToggles = 0;
+    
+    analytics.addRawMetric('difficulty', difficulty);
+    analytics.addRawMetric('puzzle_start_time', new Date().toISOString());
+    console.log('[Analytics] New game started:', currentLevelId);
   }
 
   function updateBoardUI() {
@@ -195,11 +256,25 @@ document.addEventListener("DOMContentLoaded", () => {
     board[index] = num;
     cell.textContent = num === 0 ? "" : num;
 
+      
+      // Analytics: Track if move is correct or incorrect
+      const isCorrect = (solution[index] === num);
+      if (isCorrect) {
+        analytics.addRawMetric('correct_moves', (analytics._correctMoves = (analytics._correctMoves || 0) + 1));
+      } else {
+        analytics.addRawMetric('incorrect_moves', (analytics._incorrectMoves = (analytics._incorrectMoves || 0) + 1));
+      }
+      analytics.addRawMetric('total_moves', movesMade);
     // Remove any feedback classes
     cell.classList.remove("error", "correct");
 
     highlightRelatedCells(cell);
     updateSubmitButton();
+
+    // Track move
+    if (num !== 0) {
+      movesMade++;
+    }
   }
 
   function undoMove() {
@@ -218,6 +293,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     updateSubmitButton();
+
+    // Track undo
+    undoCount++;
   }
 
   function moveSelection(key) {
@@ -272,9 +350,86 @@ document.addEventListener("DOMContentLoaded", () => {
     // 4. Final solved check
     const isSolved = totalWrong === 0 && !board.includes(0);
 
+    // ============================================
+    // ANALYTICS: Track submit attempt
+    // ============================================
+    submitAttempts++;
+    const timeTaken = Date.now() - levelStartTime;
+    const totalCells = 81;
+    const filledCells = board.filter(val => val !== 0).length;
+    const accuracy = totalCells > 0 ? ((totalCorrect / (totalCorrect + totalWrong)) * 100).toFixed(1) : 0;
+
+    console.log('[Analytics] Submit attempt #' + submitAttempts, {
+      correct: totalCorrect,
+      wrong: totalWrong,
+      accuracy: accuracy + '%',
+      filled: filledCells + '/' + totalCells
+    });
+
+    // Record this submit attempt as a task
+    analytics.recordTask(
+      currentLevelId,
+      'submit_attempt_' + submitAttempts,
+      `Submit Attempt #${submitAttempts}`,
+      'solved',
+      isSolved ? 'solved' : 'has_errors',
+      timeTaken,
+      isSolved ? 50 : 10
+    );
+
+    // Track metrics
+    analytics.addRawMetric('submit_attempts', submitAttempts);
+    analytics.addRawMetric('accuracy_percent', accuracy);
+    analytics.addRawMetric('correct_cells', totalCorrect);
+    analytics.addRawMetric('wrong_cells', totalWrong);
+    analytics.addRawMetric('filled_cells', filledCells);
+    analytics.addRawMetric('moves_made', movesMade);
+    analytics.addRawMetric('undo_count', undoCount);
+    analytics.addRawMetric('time_seconds', Math.floor(timeTaken / 1000));
+    analytics.addRawMetric('correct_moves', analytics._correctMoves || 0);
+    analytics.addRawMetric('incorrect_moves', analytics._incorrectMoves || 0);
+    analytics.addRawMetric('erase_clicks', analytics._eraseClicks || 0);
+
+    console.log('[Analytics] Metrics tracked:', analytics.getReportData().rawData);
+
     if (isSolved) {
       stopTimer();
       showMessage(`Solved in ${formatTime(seconds)}!`, "success");
+
+      // ============================================
+      // ANALYTICS: Puzzle completed!
+      // ============================================
+      const totalTime = Date.now() - levelStartTime;
+      
+      // Calculate XP with bonuses
+      const baseXP = 100;
+      const timeBonus = Math.max(0, 50 - Math.floor(totalTime / 10000));
+      const attemptBonus = Math.max(0, 50 - (submitAttempts - 1) * 10);
+      const difficultyMultiplier = difficulty === 'easy' ? 1 : difficulty === 'medium' ? 1.5 : 2;
+      const totalXP = Math.floor((baseXP + timeBonus + attemptBonus) * difficultyMultiplier);
+
+      console.log('[Analytics] Puzzle completed!', {
+        timeTaken: (totalTime / 1000).toFixed(2) + 's',
+        baseXP: baseXP,
+        timeBonus: timeBonus,
+        attemptBonus: attemptBonus,
+        difficultyMultiplier: difficultyMultiplier,
+        totalXP: totalXP
+      });
+
+      // Add final completion metrics
+      analytics.addRawMetric('completion_time_ms', totalTime);
+      analytics.addRawMetric('xp_breakdown_base', baseXP);
+      analytics.addRawMetric('xp_breakdown_time_bonus', timeBonus);
+      analytics.addRawMetric('xp_breakdown_attempt_bonus', attemptBonus);
+      analytics.addRawMetric('xp_breakdown_difficulty_multiplier', difficultyMultiplier);
+      analytics.addRawMetric('puzzle_completed', 'true');
+
+      // End level tracking
+      analytics.endLevel(currentLevelId, true, totalTime, totalXP);
+      
+      // Submit the report
+      analytics.submitReport();
     } else {
       showMessage(
         `${totalCorrect} correct, ${totalWrong} wrong. Keep trying!`,
@@ -448,4 +603,20 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     return array;
   }
+
+  // ============================================
+  // ANALYTICS: Track incomplete sessions
+  // ============================================
+  window.addEventListener('beforeunload', () => {
+    if (currentLevelId && levelStartTime > 0) {
+      const level = analytics._getLevelById(currentLevelId);
+      if (level && !level.successful) {
+        const timeTaken = Date.now() - levelStartTime;
+        analytics.endLevel(currentLevelId, false, timeTaken, 0);
+        analytics.addRawMetric('session_abandoned', 'true');
+        analytics.submitReport();
+        console.log('[Analytics] Session ended (incomplete)');
+      }
+    }
+  });
 });
