@@ -304,3 +304,5 @@ class AnalyticsManager {
     return null;
   }
 }
+// Make AnalyticsManager available globally for non-module usage
+// export default AnalyticsManager;

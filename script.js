@@ -1,4 +1,19 @@
+// AnalyticsManager is loaded globally from AnalyticsManager.js script tag
+// No import needed when not using ES6 modules
+
 document.addEventListener("DOMContentLoaded", () => {
+  // Screen Navigation Elements
+  const homeScreen = document.getElementById("home-screen");
+  const gameScreen = document.getElementById("game-screen");
+  const playGameBtn = document.getElementById("play-game-btn");
+  const howToPlayBtn = document.getElementById("how-to-play-btn");
+  const howToPlayModal = document.getElementById("how-to-play-modal");
+  const closeModalBtn = document.getElementById("close-modal-btn");
+  const themeToggleHome = document.getElementById("theme-toggle-home");
+  const themeToggleGame = document.getElementById("theme-toggle-game");
+  const homeBtn = document.getElementById("home-btn");
+
+  // Game Elements
   const boardElement = document.getElementById("sudoku-board");
   const numpad = document.querySelector(".numpad");
   const newGameBtn = document.getElementById("new-game-btn");
@@ -6,11 +21,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const eraseBtn = document.getElementById("erase-btn");
   const noteBtn = document.getElementById("note-btn");
   const submitBtn = document.getElementById("submit-btn");
-  const themeToggle = document.getElementById("theme-toggle");
   const messageElement = document.getElementById("message");
   const diffBtns = document.querySelectorAll(".diff-btn");
   const timerElement = document.getElementById("timer");
-  const submitButton = document.getElementById("submit-btn");
 
   // ============================================
   // ANALYTICS SETUP
@@ -40,88 +53,94 @@ document.addEventListener("DOMContentLoaded", () => {
   let seconds = 0;
   let isNotesMode = false;
 
-  // Initialize the game
-  initGame();
+  // ============================================
+  // UTILITY FUNCTIONS
+  // ============================================
+  function toggleTheme() {
+    const html = document.documentElement;
+    if (html.getAttribute("data-theme") === "dark") {
+      html.setAttribute("data-theme", "light");
+    } else {
+      html.setAttribute("data-theme", "dark");
+    }
+  }
 
-  // Event Listeners
-  newGameBtn.addEventListener("click", () => startNewGame());
-  submitBtn.addEventListener("click", submitGame);
+  function showMessage(text, type) {
+    messageElement.textContent = text;
+    messageElement.classList.remove("hidden");
 
-  undoBtn.addEventListener("click", () => {
-    undoMove();
-    analytics.addRawMetric('undo_button_clicks', undoCount);
-  });
-  eraseBtn.addEventListener("click", () => {
-    if (selectedCell) {
-      fillCell(selectedCell, 0);
-      analytics.addRawMetric('erase_button_clicks', (analytics._eraseClicks = (analytics._eraseClicks || 0) + 1));
+    setTimeout(() => {
+      messageElement.classList.add("hidden");
+    }, 3000);
+  }
+
+  // ============================================
+  // NAVIGATION FUNCTIONS
+  // ============================================
+  function showHomeScreen() {
+    homeScreen.classList.remove("hidden");
+    gameScreen.classList.add("hidden");
+    // Stop timer when going back home
+    if (timerInterval) {
+      clearInterval(timerInterval);
+    }
+  }
+
+  function showGameScreen() {
+    homeScreen.classList.add("hidden");
+    gameScreen.classList.remove("hidden");
+    // Start a new game when entering game screen
+    startNewGame();
+  }
+
+  function showModal() {
+    howToPlayModal.classList.remove("hidden");
+  }
+
+  function closeModal() {
+    howToPlayModal.classList.add("hidden");
+  }
+
+  // ============================================
+  // EVENT LISTENERS (Must be after function definitions)
+  // ============================================
+  
+  // Navigation Event Listeners
+  playGameBtn.addEventListener("click", showGameScreen);
+  howToPlayBtn.addEventListener("click", showModal);
+  closeModalBtn.addEventListener("click", closeModal);
+  homeBtn.addEventListener("click", showHomeScreen);
+
+  // Close modal when clicking outside
+  howToPlayModal.addEventListener("click", (e) => {
+    if (e.target === howToPlayModal) {
+      closeModal();
     }
   });
-  noteBtn.addEventListener("click", () => {
-    isNotesMode = !isNotesMode;
-    noteBtn.classList.toggle("active");
-    showMessage(isNotesMode ? "Notes Mode On" : "Notes Mode Off");
-    analytics.addRawMetric('notes_mode_toggles', (analytics._noteToggles = (analytics._noteToggles || 0) + 1));
-    analytics.addRawMetric('notes_mode_active', isNotesMode);
-  });
 
-  themeToggle.addEventListener("click", () => {
+  // Theme Toggle Event Listeners
+  themeToggleHome.addEventListener("click", () => {
     toggleTheme();
     const currentTheme = document.documentElement.getAttribute("data-theme") || "light";
     analytics.addRawMetric('theme_toggles', (analytics._themeToggles = (analytics._themeToggles || 0) + 1));
     analytics.addRawMetric('current_theme', currentTheme);
   });
 
-  diffBtns.forEach((btn) => {
-    btn.addEventListener("click", (e) => {
-      diffBtns.forEach((b) => b.classList.remove("active"));
-      e.target.classList.add("active");
-      const previousDifficulty = difficulty;
-      difficulty = e.target.dataset.diff;
-      
-      // Track difficulty change
-      if (previousDifficulty !== difficulty) {
-        analytics.addRawMetric('difficulty_changes', (analytics._difficultyChanges = (analytics._difficultyChanges || 0) + 1));
-        analytics.addRawMetric('difficulty_changed_from', previousDifficulty);
-        analytics.addRawMetric('difficulty_changed_to', difficulty);
-      }
-      
-      startNewGame();
-    });
+  themeToggleGame.addEventListener("click", () => {
+    toggleTheme();
+    const currentTheme = document.documentElement.getAttribute("data-theme") || "light";
+    analytics.addRawMetric('theme_toggles', (analytics._themeToggles = (analytics._themeToggles || 0) + 1));
+    analytics.addRawMetric('current_theme', currentTheme);
   });
 
-  numpad.addEventListener("click", (e) => {
-    if (!selectedCell) return;
-
-    if (e.target.classList.contains("num-btn")) {
-      const num = parseInt(e.target.dataset.num);
-      fillCell(selectedCell, num);
-    }
-  });
-
-  document.addEventListener("keydown", (e) => {
-    if (!selectedCell) return;
-
-    const key = e.key;
-    if (key >= "1" && key <= "9") {
-      fillCell(selectedCell, parseInt(key));
-    } else if (key === "Backspace" || key === "Delete") {
-      fillCell(selectedCell, 0);
-    } else if (
-      ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(key)
-    ) {
-      moveSelection(key);
-    } else if (key.toLowerCase() === "z" && (e.ctrlKey || e.metaKey)) {
-      undoMove();
-    }
-  });
-
+  // ============================================
+  // GAME FUNCTIONS
+  // ============================================
+  
   function initGame() {
     createBoardUI();
-    startNewGame();
-
-    // Initialize theme (already set to dark in HTML by default)
-    // No need to override unless we want to save preference
+    // Don't start a new game yet - wait for user to click play
+    // startNewGame();
   }
 
   function createBoardUI() {
@@ -481,24 +500,6 @@ document.addEventListener("DOMContentLoaded", () => {
     updateSubmitButton();
   }
 
-  function showMessage(text, type) {
-    messageElement.textContent = text;
-    messageElement.classList.remove("hidden");
-
-    setTimeout(() => {
-      messageElement.classList.add("hidden");
-    }, 3000);
-  }
-
-  function toggleTheme() {
-    const html = document.documentElement;
-    if (html.getAttribute("data-theme") === "dark") {
-      html.setAttribute("data-theme", "light");
-    } else {
-      html.setAttribute("data-theme", "dark");
-    }
-  }
-
   // --- Timer Logic ---
   function startTimer() {
     stopTimer();
@@ -598,6 +599,79 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     return array;
   }
+
+  // ============================================
+  // GAME EVENT LISTENERS (After all functions are defined)
+  // ============================================
+  newGameBtn.addEventListener("click", () => startNewGame());
+  submitBtn.addEventListener("click", submitGame);
+
+  undoBtn.addEventListener("click", () => {
+    undoMove();
+    analytics.addRawMetric('undo_button_clicks', undoCount);
+  });
+  
+  eraseBtn.addEventListener("click", () => {
+    if (selectedCell) {
+      fillCell(selectedCell, 0);
+      analytics.addRawMetric('erase_button_clicks', (analytics._eraseClicks = (analytics._eraseClicks || 0) + 1));
+    }
+  });
+  
+  noteBtn.addEventListener("click", () => {
+    isNotesMode = !isNotesMode;
+    noteBtn.classList.toggle("active");
+    showMessage(isNotesMode ? "Notes Mode On" : "Notes Mode Off");
+    analytics.addRawMetric('notes_mode_toggles', (analytics._noteToggles = (analytics._noteToggles || 0) + 1));
+    analytics.addRawMetric('notes_mode_active', isNotesMode);
+  });
+
+  diffBtns.forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      diffBtns.forEach((b) => b.classList.remove("active"));
+      e.target.classList.add("active");
+      const previousDifficulty = difficulty;
+      difficulty = e.target.dataset.diff;
+      
+      // Track difficulty change
+      if (previousDifficulty !== difficulty) {
+        analytics.addRawMetric('difficulty_changes', (analytics._difficultyChanges = (analytics._difficultyChanges || 0) + 1));
+        analytics.addRawMetric('difficulty_changed_from', previousDifficulty);
+        analytics.addRawMetric('difficulty_changed_to', difficulty);
+      }
+      
+      startNewGame();
+    });
+  });
+
+  numpad.addEventListener("click", (e) => {
+    if (!selectedCell) return;
+
+    if (e.target.classList.contains("num-btn")) {
+      const num = parseInt(e.target.dataset.num);
+      fillCell(selectedCell, num);
+    }
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (!selectedCell) return;
+
+    const key = e.key;
+    if (key >= "1" && key <= "9") {
+      fillCell(selectedCell, parseInt(key));
+    } else if (key === "Backspace" || key === "Delete") {
+      fillCell(selectedCell, 0);
+    } else if (
+      ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(key)
+    ) {
+      moveSelection(key);
+    } else if (key.toLowerCase() === "z" && (e.ctrlKey || e.metaKey)) {
+      undoMove();
+    }
+  });
+
+  // Initialize the game (create board UI, but don't start game yet)
+  initGame();
 
   // ============================================
   // ANALYTICS: Track incomplete sessions

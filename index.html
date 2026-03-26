@@ -5,18 +5,72 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <meta name="description" content="Play Sudoku - Challenge your mind with logic puzzles">
     <title>Sudoku Game</title>
-    <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="app-container">
+    <!-- Home Screen -->
+    <div class="home-container" id="home-screen">
+        <div class="hero-section">
+            <div class="theme-toggle" id="theme-toggle-home" title="Toggle Theme">
+                <svg class="sun-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
+                </svg>
+                <svg class="moon-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+            </div>
+            
+            <h1 class="gradient-title hero-title">SUDOKU</h1>
+            <p class="subtitle">Challenge your mind with logic puzzles</p>
+            
+            <div class="home-actions">
+                <button id="play-game-btn" class="primary-btn large-btn">Play Game</button>
+                <button id="how-to-play-btn" class="secondary-btn large-btn">How to Play</button>
+            </div>
+        </div>
+
+        <!-- How to Play Modal -->
+        <div id="how-to-play-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>How to Play Sudoku</h2>
+                    <button id="close-modal-btn" class="close-btn">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="instruction-step">
+                        <span class="step-number">1</span>
+                        <p>Fill the grid so that every row, column, and 3x3 box contains the digits 1 through 9.</p>
+                    </div>
+                    <div class="instruction-step">
+                        <span class="step-number">2</span>
+                        <p>Each number can only appear once in each row, column, and box.</p>
+                    </div>
+                    <div class="instruction-step">
+                        <span class="step-number">3</span>
+                        <p>Use logic to deduce the missing numbers. No guessing required!</p>
+                    </div>
+                    <div class="instruction-step">
+                        <span class="step-number">4</span>
+                        <p>Use <strong>Notes</strong> mode to jot down possibilities if you get stuck.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div class="app-container hidden" id="game-screen">
         <header>
             <div class="header-top">
-                <a href="homepage.html" class="back-btn" title="Back to Home">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                </a>
+                <button class="back-btn" id="home-btn" title="Home">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                    </svg>
+                </button>
                 <h1 class="gradient-title">SUDOKU</h1>
-                <div class="theme-toggle" id="theme-toggle" title="Toggle Theme">
+                <div class="theme-toggle" id="theme-toggle-game" title="Toggle Theme">
                     <svg class="sun-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="5"></circle>
                         <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
@@ -94,7 +148,7 @@
         <div id="message" class="toast hidden"></div>
     </div>
 
-    <!-- IMPORTANT: Analytics must load FIRST -->
+    <!-- Load AnalyticsManager first, then main script -->
     <script src="AnalyticsManager.js"></script>
     <script src="script.js"></script>
 </body>

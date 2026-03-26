@@ -919,6 +919,11 @@ header {
     }
 }
 
+/* Utility Classes */
+.hidden {
+    display: none !important;
+}
+
 /* Modal Styles */
 .modal {
     position: fixed;

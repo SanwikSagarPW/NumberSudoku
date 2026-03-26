@@ -1,9 +1,9 @@
 # Node modules
-js-analytics-bridge/node_modules/
 node_modules/
 
 # Build files
-js-analytics-bridge/dist/
+dist/
+.vite/
 
 # OS files
 .DS_Store
