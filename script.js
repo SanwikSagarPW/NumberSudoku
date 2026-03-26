@@ -120,13 +120,8 @@ document.addEventListener("DOMContentLoaded", () => {
     createBoardUI();
     startNewGame();
 
-    // Check system preference for theme
-    if (
-      window.matchMedia &&
-      window.matchMedia("(prefers-color-scheme: dark)").matches
-    ) {
-      document.documentElement.setAttribute("data-theme", "dark");
-    }
+    // Initialize theme (already set to dark in HTML by default)
+    // No need to override unless we want to save preference
   }
 
   function createBoardUI() {
@@ -498,7 +493,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function toggleTheme() {
     const html = document.documentElement;
     if (html.getAttribute("data-theme") === "dark") {
-      html.removeAttribute("data-theme");
+      html.setAttribute("data-theme", "light");
     } else {
       html.setAttribute("data-theme", "dark");
     }

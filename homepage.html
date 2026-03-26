@@ -1,18 +1,28 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="description" content="Sudoku - Challenge your mind with logic puzzles">
     <title>Sudoku - Home</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div id="bg-numbers" class="bg-numbers"></div>
     <div class="home-container">
         <div class="hero-section">
-            <h1 class="main-title">Sudoku</h1>
-            <p class="subtitle">Challenge your mind</p>
+            <div class="theme-toggle" id="theme-toggle" title="Toggle Theme">
+                <svg class="sun-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
+                </svg>
+                <svg class="moon-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+            </div>
+            
+            <h1 class="gradient-title hero-title">SUDOKU</h1>
+            <p class="subtitle">Challenge your mind with logic puzzles</p>
             
             <div class="home-actions">
                 <a href="index.html" class="primary-btn large-btn">Play Game</a>
@@ -23,7 +33,7 @@
         <div id="how-to-play-modal" class="modal hidden">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h2>How to Play</h2>
+                    <h2>How to Play Sudoku</h2>
                     <button id="close-modal-btn" class="close-btn">&times;</button>
                 </div>
                 <div class="modal-body">
@@ -54,11 +64,17 @@
             const modal = document.getElementById('how-to-play-modal');
             const btn = document.getElementById('how-to-play-btn');
             const closeBtn = document.getElementById('close-modal-btn');
+            const themeToggle = document.getElementById('theme-toggle');
 
-            // Check for dark mode preference
-            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                document.documentElement.setAttribute('data-theme', 'dark');
-            }
+            // Theme toggle
+            themeToggle.addEventListener('click', () => {
+                const html = document.documentElement;
+                if (html.getAttribute('data-theme') === 'dark') {
+                    html.setAttribute('data-theme', 'light');
+                } else {
+                    html.setAttribute('data-theme', 'dark');
+                }
+            });
 
             btn.addEventListener('click', () => {
                 modal.classList.remove('hidden');
@@ -73,39 +89,6 @@
                     modal.classList.add('hidden');
                 }
             });
-
-            // Background Numbers Animation
-            const bgContainer = document.getElementById('bg-numbers');
-            const gridSize = 40; // Must match CSS background-size
-
-            function spawnNumber() {
-                const num = Math.floor(Math.random() * 9) + 1;
-                const el = document.createElement('div');
-                el.classList.add('bg-number');
-                el.textContent = num;
-
-                // Random grid position
-                const cols = Math.ceil(window.innerWidth / gridSize);
-                const rows = Math.ceil(window.innerHeight / gridSize);
-                const c = Math.floor(Math.random() * cols);
-                const r = Math.floor(Math.random() * rows);
-
-                el.style.left = (c * gridSize) + 'px';
-                el.style.top = (r * gridSize) + 'px';
-                
-                // Random animation duration
-                const duration = 2000 + Math.random() * 3000;
-                el.style.animation = `fadeNumber ${duration}ms ease-in-out forwards`;
-
-                bgContainer.appendChild(el);
-
-                setTimeout(() => {
-                    el.remove();
-                }, duration);
-            }
-
-            // Spawn a number every 300ms
-            setInterval(spawnNumber, 300);
         });
     </script>
 </body>
