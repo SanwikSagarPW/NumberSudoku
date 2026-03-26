@@ -116,19 +116,55 @@ header {
     font-size: 1.6rem;
     font-weight: 800;
     letter-spacing: 0.1em;
-    background: linear-gradient(90deg, 
+    text-align: center;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.gradient-title .letter {
+    display: inline-block;
+    background: linear-gradient(135deg, 
         #ff006e 0%, 
-        #ff6b35 20%, 
-        #ffbe0b 40%, 
-        #8338ec 60%, 
-        #3a86ff 80%, 
+        #ff6b35 15%, 
+        #ffbe0b 30%, 
+        #8338ec 50%, 
+        #3a86ff 70%, 
         #06ffa5 100%
     );
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    text-align: center;
-    margin: 0;
+    transition: transform 0.3s ease;
+}
+
+.gradient-title .letter-1 {
+    transform: rotate(-8deg);
+}
+
+.gradient-title .letter-2 {
+    transform: rotate(5deg);
+}
+
+.gradient-title .letter-3 {
+    transform: rotate(-6deg);
+}
+
+.gradient-title .letter-4 {
+    transform: rotate(7deg);
+}
+
+.gradient-title .letter-5 {
+    transform: rotate(-5deg);
+}
+
+.gradient-title .letter-6 {
+    transform: rotate(6deg);
+}
+
+.gradient-title .letter:hover {
+    transform: rotate(0deg) scale(1.1);
 }
 
 .theme-toggle {
@@ -352,8 +388,8 @@ header {
 .num-btn {
     aspect-ratio: 1;
     width: 100%;
-    background-color: transparent;
-    border: none;
+    background-color: var(--cell-bg);
+    border: 2px solid var(--grid-line);
     border-radius: 10px;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -363,8 +399,14 @@ header {
     padding: 0;
 }
 
+.num-btn:hover {
+    background-color: var(--cell-hover);
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+}
+
 .num-btn:active {
-    transform: scale(0.9);
+    transform: scale(0.95);
 }
 
 .gradient-num {
