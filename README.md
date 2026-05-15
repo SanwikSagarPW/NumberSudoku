@@ -37,7 +37,6 @@ Then visit `http://localhost:8000`
 - **Dual Themes**: Beautiful light and dark modes
 - **Timer**: Track how long it takes to solve
 - **Undo Functionality**: Revert your moves
-- **Notes Mode**: Mark possible numbers in cells
 - **Analytics**: Game session tracking
 - **Fully Responsive**: Works on all screen sizes
 - **No Build Required**: Pure vanilla JavaScript
@@ -47,7 +46,7 @@ Then visit `http://localhost:8000`
 1. Select a difficulty level (Easy, Medium, Hard)
 2. Click on a cell to select it
 3. Enter a number (1-9) using the on-screen keypad or keyboard
-4. Use Undo/Erase/Notes tools as needed
+4. Use Undo/Erase tools as needed
 5. Complete the grid so every row, column, and 3x3 box contains digits 1-9
 6. Click Submit to check your solution
 

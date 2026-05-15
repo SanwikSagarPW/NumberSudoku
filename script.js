@@ -19,7 +19,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const newGameBtn = document.getElementById("new-game-btn");
   const undoBtn = document.getElementById("undo-btn");
   const eraseBtn = document.getElementById("erase-btn");
-  const noteBtn = document.getElementById("note-btn");
   const submitBtn = document.getElementById("submit-btn");
   const messageElement = document.getElementById("message");
   const diffBtns = document.querySelectorAll(".diff-btn");
@@ -51,7 +50,6 @@ document.addEventListener("DOMContentLoaded", () => {
   let difficulty = "easy";
   let timerInterval;
   let seconds = 0;
-  let isNotesMode = false;
 
   // ============================================
   // UTILITY FUNCTIONS
@@ -199,7 +197,7 @@ document.addEventListener("DOMContentLoaded", () => {
     analytics._correctMoves = 0;
     analytics._incorrectMoves = 0;
     analytics._eraseClicks = 0;
-    analytics._noteToggles = 0;
+    // notes feature removed
     
     analytics.addRawMetric('difficulty', difficulty);
     analytics.addRawMetric('puzzle_start_time', new Date().toISOString());
@@ -617,14 +615,7 @@ document.addEventListener("DOMContentLoaded", () => {
       analytics.addRawMetric('erase_button_clicks', (analytics._eraseClicks = (analytics._eraseClicks || 0) + 1));
     }
   });
-  
-  noteBtn.addEventListener("click", () => {
-    isNotesMode = !isNotesMode;
-    noteBtn.classList.toggle("active");
-    showMessage(isNotesMode ? "Notes Mode On" : "Notes Mode Off");
-    analytics.addRawMetric('notes_mode_toggles', (analytics._noteToggles = (analytics._noteToggles || 0) + 1));
-    analytics.addRawMetric('notes_mode_active', isNotesMode);
-  });
+  // Notes button and related logic removed
 
   diffBtns.forEach((btn) => {
     btn.addEventListener("click", (e) => {
